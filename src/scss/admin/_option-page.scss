@@ -1,0 +1,65 @@
+$color-white: #ffffff;
+$color-sky: #00aaff;
+$color-sky-hover: #0099e6;
+$color-gray: #f1f1f1;
+$color-text: #333;
+
+// Block: plugin-settings
+.plugin-settings {
+  background-color: $color-white;
+  padding: 20px;
+  border: 1px solid $color-gray;
+  border-radius: 4px;
+
+  &__title {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: $color-sky;
+  }
+
+  &__form {
+    // Dodatkowe style dla formularza (opcjonalnie)
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+
+    th,
+    td {
+      padding: 10px;
+      border-bottom: 1px solid $color-gray;
+    }
+
+    th {
+      text-align: left;
+      color: $color-text;
+    }
+  }
+
+  &__checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    border: 1px solid $color-sky;
+    border-radius: 2px;
+  }
+
+  &__submit {
+    background-color: $color-sky;
+    color: $color-white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+
+    &:hover,
+    &:focus {
+      background-color: $color-sky-hover;
+    }
+  }
+}

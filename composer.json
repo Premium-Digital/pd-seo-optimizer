@@ -1,0 +1,25 @@
+{
+    "name": "stlpl/pd-seo-optimizer",
+    "autoload": {
+        "psr-4": {
+            "PdSeoOptimizer\\": "App/"
+        }
+    },
+    "authors": [
+        {
+            "name": "maxkonar",
+            "email": "k.karasiewicz@premiumdigital.pl"
+        }
+    ],
+    "require": {
+        "yahnis-elsts/plugin-update-checker": "^5.5",
+        "openai-php/client": "^0.14.0",
+        "symfony/http-client": "^7.3",
+        "nyholm/psr7": "^1.8"
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
+    }
+}
