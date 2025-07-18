@@ -14,7 +14,16 @@ class Filters
             add_filter('bulk_actions-edit-page', [$this, 'addBulkActions']);
             add_filter('handle_bulk_actions-edit-post', [$this, 'handleBulkActions'], 10, 3);
             add_filter('handle_bulk_actions-edit-page', [$this, 'handleBulkActions'], 10, 3);
+            $this->addBulkActionsForEveryCpt();
         }
+    }
+
+    public function addBulkActionsForEveryCpt(){
+        $postTypes = get_post_types(['public' => true], 'names');
+         foreach ($postTypes as $postType) {
+             add_filter("bulk_actions-edit-{$postType}", [$this, 'addBulkActions']);
+             add_filter("handle_bulk_actions-edit-{$postType}", [$this, 'handleBulkActions'], 10, 3);
+         }
     }
 
     function addBulkActions($actions)
