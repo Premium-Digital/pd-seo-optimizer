@@ -23,14 +23,20 @@ jobs:
       - name: 📊 Check for version change
         id: diff
         run: |
-          PREV_COMMIT=$(git rev-parse HEAD~1)
-          CHANGED=$(git diff $PREV_COMMIT HEAD -- pd-extra-widgets.php | grep -c '^+.*Version:')
+          set -e
+          if git rev-parse HEAD~1 >/dev/null 2>&1; then
+            PREV_COMMIT=$(git rev-parse HEAD~1)
+            CHANGED=$(git diff $PREV_COMMIT HEAD -- pd-seo-optimizer.php | grep -c '^+.*Version:')
+          else
+            echo "Only one commit – assuming no version change."
+            CHANGED=0
+          fi
           echo "changed=$CHANGED" >> $GITHUB_OUTPUT
 
       - name: 🏷 Extract version from plugin
         id: extract
         run: |
-          VERSION=$(grep -oP 'Version:\s*\K[0-9.]+' pd-extra-widgets.php)
+          VERSION=$(grep -oP 'Version:\s*\K[0-9.]+' pd-seo-optimizer.php)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
   build:
@@ -64,7 +70,7 @@ jobs:
       - name: 🗜 Create ZIP
         run: |
           mkdir build
-          zip -r build/pd-extra-widgets.zip . \
+          zip -r build/pd-seo-optimizer.zip . \
             -x "*.git*" "*.github*" "node_modules/*" "src/*" "tests/*" "package-lock.json"
 
       - name: 🚀 Release on GitHub
@@ -72,4 +78,4 @@ jobs:
         with:
           tag_name: v${{ needs.check-version.outputs.new_version }}
           name: v${{ needs.check-version.outputs.new_version }}
-          files: build/pd-extra-widgets.zip
+          files: build/pd-seo-optimizer.zip
