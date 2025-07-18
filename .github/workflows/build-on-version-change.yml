@@ -24,13 +24,17 @@ jobs:
         id: diff
         run: |
           if git rev-parse HEAD~1 >/dev/null 2>&1; then
-             PREV_COMMIT=$(git rev-parse HEAD~1 || echo "")
-             CHANGED=$(git diff $PREV_COMMIT HEAD -- pd-seo-optimizer.php | grep -c '^+.*Version:' || true)
-          selse
-             echo "Only one commit – assuming no version change."
-             CHANGED=0
-           fi
-           echo "changed=$CHANGED" >> $GITHUB_OUTPUT
+            PREV_COMMIT=$(git rev-parse HEAD~1)
+            if git diff $PREV_COMMIT HEAD -- pd-seo-optimizer.php | grep -q '^+.*Version:'; then
+              CHANGED=1
+            else
+              CHANGED=0
+            fi
+          else
+            echo "Only one commit – assuming no version change."
+            CHANGED=0
+          fi
+          echo "changed=$CHANGED" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: 🏷 Extract version from plugin
