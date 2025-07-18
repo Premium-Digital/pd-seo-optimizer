@@ -3,6 +3,7 @@
 namespace PdSeoOptimizer;
 
 use PdSeoOptimizer\Services\OpenAiClient;
+use PdSeoOptimizer\Logger;
 
 class Filters
 {
@@ -55,6 +56,12 @@ class Filters
 
             update_post_meta($post_id, 'rank_math_title', $titleClean);
             update_post_meta($post_id, 'rank_math_description', $descriptionClean);
+
+            // Log the action
+            Logger::getInstance()->addLog($post_id, 'update', [
+                'title' => $titleClean,
+                'description' => $descriptionClean,
+            ]);
         }
 
         return add_query_arg('generated_meta', count($post_ids), $redirect_to);

@@ -11,7 +11,7 @@ use PdSeoOptimizer\Notifier;
 
 class PluginManager
 {
-    //private $logger;
+    private $logger;
     private $actions;
     private $settings;
     private $filters;
@@ -19,9 +19,7 @@ class PluginManager
 
     public function __construct()
     {
-        global $wpdb;
-
-        //$this->logger = Logger::getInstance($wpdb);
+        $this->logger = Logger::getInstance();
         $this->actions = new Actions();
         $this->settings = new Settings();
         $this->filters = new Filters();

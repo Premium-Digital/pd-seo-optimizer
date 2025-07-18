@@ -18,17 +18,17 @@ class Settings
             'pd_seo_optimizer_settings',
             [$this, 'renderSettingsPage'],
             'dashicons-admin-generic',
-            20
+            150
         );
 
-        // add_submenu_page(
-        //     'pd_seo_optimizer_settings',
-        //     __('Information', 'pd-seo-optimizer'),
-        //     __('Information', 'pd-seo-optimizer'),
-        //     'manage_options',
-        //     'pd_seo_optimizer_info',
-        //     [$this, 'renderInfoPage']
-        // );
+        add_submenu_page(
+            'pd_seo_optimizer_settings',
+            'Logs',
+            'Logs',
+            'manage_options',
+            'pd_seo_optimizer_logs',
+            [$this, 'renderLogsPage']
+        );
     }
 
     public function renderSettingsPage() {
@@ -49,5 +49,20 @@ class Settings
 
     public static function saveApiKey($apiKey) {
         update_site_option('pd_seo_optimizer_post_api_key', $apiKey);
+    }
+
+    public function renderLogsPage() {
+        global $wpdb;
+        
+        $logger = \PdSeoOptimizer\Logger::getInstance($wpdb);
+        $logs = $logger->getLogs(100); // możesz zmienić limit
+        
+        require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
+        
+        $table = new \PdSeoOptimizer\SeoLogsTable($logs);
+        echo '<div class="wrap"><h1>SEO Optimizer Logs</h1>';
+        $table->prepare_items();
+        $table->display();
+        echo '</div>';
     }
 }

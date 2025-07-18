@@ -3,6 +3,7 @@ $color-sky: #00aaff;
 $color-sky-hover: #0099e6;
 $color-gray: #f1f1f1;
 $color-text: #333;
+$gradient-bg: linear-gradient(230deg, #000000 65%, #2CE1F4 100%);
 
 // Block: plugin-settings
 .plugin-settings {
@@ -15,6 +16,10 @@ $color-text: #333;
     font-size: 24px;
     margin-bottom: 20px;
     color: $color-sky;
+    background: $gradient-bg;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: normal;
   }
 
   &__form {

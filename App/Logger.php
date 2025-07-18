@@ -8,10 +8,10 @@ class Logger {
     private $wpdb;
     private $tableName;
     private $id = 'id';
-    private $logTime = 'log_time';
-    private $message = 'message';
     private $postId = 'post_id';
+    private $details = 'details';
     private $status = 'status';
+    private $logTime = 'log_time';
 
     private static $instance = null;
 
@@ -23,7 +23,8 @@ class Logger {
         $this->createTable();
     }
 
-    public static function getInstance(wpdb $wpdb) {
+    public static function getInstance() {
+        global $wpdb;
         if (self::$instance === null) {
             self::$instance = new Logger($wpdb);
         }
@@ -46,9 +47,9 @@ class Logger {
 
         $sql = "CREATE TABLE {$this->tableName} (
             {$this->id} BIGINT(20) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-            {$this->message} TEXT NOT NULL,
             {$this->postId} BIGINT(20) UNSIGNED NULL,
-            {$this->status} VARCHAR(50) NOT NULL,
+            {$this->details} TEXT NULL,
+            {$this->status} VARCHAR(20) NOT NULL DEFAULT 'update',
             {$this->logTime} DATETIME DEFAULT CURRENT_TIMESTAMP,
             UNIQUE KEY {$this->id} ({$this->id})
         ) $charsetCollate;";
@@ -57,14 +58,14 @@ class Logger {
         dbDelta($sql);
     }
 
-    public function addLog(string $message, ?int $postId = null, string $status = 'info') {
+    public function addLog(?int $postId = null, string $status = "update", array $details  = []) {
         $this->wpdb->query(
             $this->wpdb->prepare(
-                "INSERT INTO {$this->tableName} ({$this->message}, {$this->postId}, {$this->status}, {$this->logTime}) 
-                VALUES (%s, %d, %s, %s)",
-                sanitize_text_field($message),
+                "INSERT INTO {$this->tableName} ({$this->postId}, {$this->details}, {$this->status}, {$this->logTime}) 
+                VALUES (%d, %s, %s, %s)",
                 $postId,
-                sanitize_text_field($status),
+                wp_json_encode($details, JSON_UNESCAPED_UNICODE),
+                $status,
                 current_time('mysql')
             )
         );
