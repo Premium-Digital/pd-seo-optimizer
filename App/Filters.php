@@ -10,20 +10,25 @@ class Filters
     public function __construct()
     {
         if (is_plugin_active('seo-by-rank-math/rank-math.php')) {
-            add_filter('bulk_actions-edit-post', [$this, 'addBulkActions']);
-            add_filter('bulk_actions-edit-page', [$this, 'addBulkActions']);
-            add_filter('handle_bulk_actions-edit-post', [$this, 'handleBulkActions'], 10, 3);
-            add_filter('handle_bulk_actions-edit-page', [$this, 'handleBulkActions'], 10, 3);
-            $this->addBulkActionsForEveryCpt();
+            add_action('init', [$this, 'addBulkActionsForRankMathCpt'], 20, 2);
         }
     }
 
-    public function addBulkActionsForEveryCpt(){
-        $postTypes = get_post_types(['public' => true], 'names');
-         foreach ($postTypes as $postType) {
-             add_filter("bulk_actions-edit-{$postType}", [$this, 'addBulkActions']);
-             add_filter("handle_bulk_actions-edit-{$postType}", [$this, 'handleBulkActions'], 10, 3);
-         }
+    public function addBulkActionsForRankMathCpt(){
+        if (!class_exists('\RankMath\Helper')) {
+            return;
+        }
+
+        $postTypes = \RankMath\Helper::get_allowed_post_types();
+
+        if (!is_array($postTypes)) {
+            return;
+        }
+
+        foreach ($postTypes as $postType) {
+            add_filter("bulk_actions-edit-{$postType}", [$this, 'addBulkActions']);
+            add_filter("handle_bulk_actions-edit-{$postType}", [$this, 'handleBulkActions'], 10, 3);
+        }
     }
 
     function addBulkActions($actions)

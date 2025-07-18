@@ -20,24 +20,51 @@ class OpenAiClient
 
     public function generateMeta(string $content): array
     {
+        if (empty($content)) {
+            return [
+                'title' => '',
+                'description' => '',
+            ];
+        }
+
+        $title = $this->generateTitle($content);
+        $description = $this->generateDescription($content);
+        
+        return [
+            'title' => $title,
+            'description' => $description,
+        ];
+    }
+
+    public function generateTitle(string $content): string
+    {
         $response = $this->client->chat()->create([
             'model' => 'gpt-4o',
             'messages' => [
-                ['role' => 'system', 'content' => 'Na podstawie poniższej treści posta wygeneruj:
-                    1. Meta title — maksymalnie 60 znaków, chwytliwy, zawierający główne słowo kluczowe i zachęcający do kliknięcia.
-                    2. Meta description — maksymalnie 155 znaków, opisujący zwięźle temat posta, również z głównym słowem kluczowym, w formie marketingowej.'],
+                [
+                    'role' => 'system',
+                    'content' => 'Wygeneruj wyłącznie meta tytuł (do 60 znaków) na podstawie treści posta. Nie dodawaj etykiet, wyjaśnień ani niczego innego. Zwróć tylko sam tytuł w jednej linii.',
+                ],
                 ['role' => 'user', 'content' => $content],
             ],
         ]);
 
-        $output = $response->choices[0]->message->content ?? '';
+        return trim($response->choices[0]->message->content ?? '');
+    }
 
-        preg_match('/title:(.+?)\n/i', $output, $title);
-        preg_match('/description:(.+)/i', $output, $description);
+    public function generateDescription(string $content): string
+    {
+        $response = $this->client->chat()->create([
+            'model' => 'gpt-4o',
+            'messages' => [
+                [
+                    'role' => 'system',
+                    'content' => 'Wygeneruj wyłącznie meta opis (do 155 znaków) na podstawie treści posta. Opis ma być marketingowy, konkretny, zawierający główne słowo kluczowe. Nie dodawaj etykiet, nagłówków ani dodatkowego formatowania. Zwróć tylko opis.',
+                ],
+                ['role' => 'user', 'content' => $content],
+            ],
+        ]);
 
-        return [
-            'title' => trim($title[1] ?? ''),
-            'description' => trim($description[1] ?? ''),
-        ];
+        return trim($response->choices[0]->message->content ?? '');
     }
 }
