@@ -44,26 +44,30 @@ class Filters
             return $redirect_to;
         }
 
-        $openAiClient = new OpenAiClient();
+        return add_query_arg([
+            'pd_generate_meta' => 1,
+            'post_ids' => implode(',', $post_ids),
+        ], $redirect_to);
 
-        foreach ($post_ids as $post_id) {
-            $content = get_post_field('post_content', $post_id);
+        // $openAiClient = new OpenAiClient();
+
+        // foreach ($post_ids as $post_id) {
+        //     $content = get_post_field('post_content', $post_id);
             
-            $response = $openAiClient->generateMeta($content);
+        //     $response = $openAiClient->generateMeta($content);
 
-            $titleClean = trim($response['title'], '"');
-            $descriptionClean = trim($response['description'], '"');
+        //     $titleClean = trim($response['title'], '"');
+        //     $descriptionClean = trim($response['description'], '"');
 
-            update_post_meta($post_id, 'rank_math_title', $titleClean);
-            update_post_meta($post_id, 'rank_math_description', $descriptionClean);
+        //     update_post_meta($post_id, 'rank_math_title', $titleClean);
+        //     update_post_meta($post_id, 'rank_math_description', $descriptionClean);
 
-            // Log the action
-            Logger::getInstance()->addLog($post_id, 'update', [
-                'title' => $titleClean,
-                'description' => $descriptionClean,
-            ]);
-        }
+        //     Logger::getInstance()->addLog($post_id, 'update', [
+        //         'title' => $titleClean,
+        //         'description' => $descriptionClean,
+        //     ]);
+        // }
 
-        return add_query_arg('generated_meta', count($post_ids), $redirect_to);
+        // return add_query_arg('generated_meta', count($post_ids), $redirect_to);
     }
 }
