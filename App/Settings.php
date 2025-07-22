@@ -45,6 +45,11 @@ class Settings
 
     public function registerSettings() {
         register_setting('pd_seo_optimizer_options_group', 'pd_seo_optimizer_openai_api_key');
+        register_setting('pd_seo_optimizer_options_group', 'pd_seo_optimizer_batch_size', [
+            'type' => 'integer',
+            'default' => 10,
+            'sanitize_callback' => 'absint'
+        ]);
     }
 
     public static function saveApiKey($apiKey) {
@@ -52,17 +57,17 @@ class Settings
     }
 
     public function renderLogsPage() {
-        global $wpdb;
-        
-        $logger = \PdSeoOptimizer\Logger::getInstance($wpdb);
-        $logs = $logger->getLogs(100); // możesz zmienić limit
-        
         require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
-        
-        $table = new \PdSeoOptimizer\SeoLogsTable($logs);
-        echo '<div class="wrap"><h1>SEO Optimizer Logs</h1>';
+
+        $table = new SeoLogsTable();
         $table->prepare_items();
+
+        echo '<div class="wrap"><h1>' . esc_html__("SEO Optimizer Logs", "pd-seo-optimizer") . '</h1>';
+        echo '<form method="post">';
+        $table->search_box('Search Logs', 'log_search');
         $table->display();
+        echo '</form>';
         echo '</div>';
-    }
+        }
+
 }

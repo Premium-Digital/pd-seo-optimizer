@@ -31,4 +31,11 @@ class PluginManager
         \flush_rewrite_rules();
     }
 
+    public static function deactivate()
+    {
+
+        \delete_site_option('pd_seo_optimizer_post_api_key');
+        \flush_rewrite_rules();
+    }
+
 }

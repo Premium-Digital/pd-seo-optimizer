@@ -10,16 +10,7 @@
         <table class="plugin-settings__table">
             <?php
                 include(PD_SEO_OPTIMIZER_PLUGIN_DIR_PATH . "templates/admin/plugin-options-sections/api-key.php");
-                // include(PD_SEO_OPTIMIZER_PLUGIN_DIR_PATH . "templates/admin/plugin-options-sections/enable-plugin.php");
-                // include(PD_SEO_OPTIMIZER_PLUGIN_DIR_PATH . "templates/admin/plugin-options-sections/post-status.php");
-                // include(PD_SEO_OPTIMIZER_PLUGIN_DIR_PATH . "templates/admin/plugin-options-sections/post-author.php");
-                // include(PD_SEO_OPTIMIZER_PLUGIN_DIR_PATH . "templates/admin/plugin-options-sections/logo.php");
-                // include(PD_SEO_OPTIMIZER_PLUGIN_DIR_PATH . "templates/admin/plugin-options-sections/logo-position.php");
-                // include(PD_SEO_OPTIMIZER_PLUGIN_DIR_PATH . "templates/admin/plugin-options-sections/font-family.php");
-                // include(PD_SEO_OPTIMIZER_PLUGIN_DIR_PATH . "templates/admin/plugin-options-sections/font-size.php");
-                // include(PD_SEO_OPTIMIZER_PLUGIN_DIR_PATH . "templates/admin/plugin-options-sections/text-color.php");
-                // include(PD_SEO_OPTIMIZER_PLUGIN_DIR_PATH . "templates/admin/plugin-options-sections/background-color.php");
-                // include(PD_SEO_OPTIMIZER_PLUGIN_DIR_PATH . "templates/admin/plugin-options-sections/text-position.php");
+                include(PD_SEO_OPTIMIZER_PLUGIN_DIR_PATH . "templates/admin/plugin-options-sections/batch-size.php");
             ?>
         </table>
 

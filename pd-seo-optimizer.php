@@ -3,7 +3,7 @@
 /**
  * Plugin Name: PD Seo Optimizer
  * Description: Seo Optimizer for WordPress.
- * Version: 1.0.8
+ * Version: 1.0.9
  * Author: kkarasiewicz
  */
 
@@ -40,3 +40,4 @@ class PdSeoOptimizer
 new PdSeoOptimizer();
 
 register_activation_hook(__FILE__, ['PdSeoOptimizer\PluginManager', 'activate']);
+register_deactivation_hook(__FILE__, ['PdSeoOptimizer\PluginManager', 'deactivate']);

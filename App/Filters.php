@@ -2,9 +2,6 @@
 
 namespace PdSeoOptimizer;
 
-use PdSeoOptimizer\Services\OpenAiClient;
-use PdSeoOptimizer\Logger;
-
 class Filters
 {
     
@@ -48,26 +45,5 @@ class Filters
             'pd_generate_meta' => 1,
             'post_ids' => implode(',', $post_ids),
         ], $redirect_to);
-
-        // $openAiClient = new OpenAiClient();
-
-        // foreach ($post_ids as $post_id) {
-        //     $content = get_post_field('post_content', $post_id);
-            
-        //     $response = $openAiClient->generateMeta($content);
-
-        //     $titleClean = trim($response['title'], '"');
-        //     $descriptionClean = trim($response['description'], '"');
-
-        //     update_post_meta($post_id, 'rank_math_title', $titleClean);
-        //     update_post_meta($post_id, 'rank_math_description', $descriptionClean);
-
-        //     Logger::getInstance()->addLog($post_id, 'update', [
-        //         'title' => $titleClean,
-        //         'description' => $descriptionClean,
-        //     ]);
-        // }
-
-        // return add_query_arg('generated_meta', count($post_ids), $redirect_to);
     }
 }
