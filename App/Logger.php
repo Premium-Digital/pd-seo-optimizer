@@ -71,11 +71,43 @@ class Logger {
         );
     }
 
-    public function getLogs(int $limit = 50) {
-        return $this->wpdb->get_results(
+    public function getLogs(int $limit, int $offset, string $search = '') {
+        if ($search !== '') {
+            $sql = "SELECT * FROM {$this->tableName} WHERE details LIKE %s ORDER BY {$this->logTime} DESC LIMIT %d OFFSET %d";
+            return $this->wpdb->get_results(
+                $this->wpdb->prepare($sql, "%{$search}%", $limit, $offset)
+            );
+        } else {
+            $sql = "SELECT * FROM {$this->tableName} ORDER BY {$this->logTime} DESC LIMIT %d OFFSET %d";
+            return $this->wpdb->get_results(
+                $this->wpdb->prepare($sql, $limit, $offset)
+            );
+        }
+    }
+
+
+    public function countLogs(string $search = '') {
+        if ($search !== '') {
+            $sql = "SELECT COUNT(*) FROM {$this->tableName} WHERE details LIKE %s";
+            return (int) $this->wpdb->get_var(
+                $this->wpdb->prepare($sql, "%{$search}%")
+            );
+        } else {
+            $sql = "SELECT COUNT(*) FROM {$this->tableName}";
+            return (int) $this->wpdb->get_var($sql);
+        }
+    }
+
+    public function deleteLogs(array $ids) {
+        if (empty($ids)) {
+            return;
+        }
+
+        $placeholders = implode(',', array_fill(0, count($ids), '%d'));
+        $this->wpdb->query(
             $this->wpdb->prepare(
-                "SELECT * FROM {$this->tableName} ORDER BY {$this->logTime} DESC LIMIT %d",
-                $limit
+                "DELETE FROM {$this->tableName} WHERE {$this->id} IN ($placeholders)",
+                ...$ids
             )
         );
     }

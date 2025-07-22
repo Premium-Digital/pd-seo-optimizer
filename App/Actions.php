@@ -8,8 +8,8 @@ class Actions
     {
         add_action( 'wp_enqueue_scripts', array( $this, 'registerStylesAndScripts' ) );
         add_action( 'admin_enqueue_scripts', array( $this, 'registerAdminStylesAndScripts' ));
-        //add_action( 'admin_enqueue_scripts', array( $this, 'registerAdminScriptsOnEditPage' ), 10, 1 );
         add_action( 'wp_ajax_pd_generate_meta_batch', array($this, 'handleGenerateMetaBatch'));
+        add_action( 'admin_footer-edit.php', [$this, 'renderMetaGeneratorPopup']);
     }
 
     public function registerStylesAndScripts()
@@ -34,6 +34,7 @@ class Actions
         wp_localize_script('pd-seo-optimizer-admin-scripts', 'pdSeoMetaData', [
             'ajaxurl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('pd_seo_meta_nonce'),
+            'batchSize' => (int) get_option('pd_seo_optimizer_batch_size'),
         ]);
 
     }
@@ -65,5 +66,15 @@ class Actions
         }
 
         wp_send_json_success('Batch processed');
-    }   
+    }  
+
+    public function renderMetaGeneratorPopup() {
+        $currentPostType = $_GET['post_type'] ?? 'post';
+        $allowedTypes = \RankMath\Helper::get_allowed_post_types();
+
+        if (!in_array($currentPostType, $allowedTypes, true)) {
+            return;
+        }
+        include PD_SEO_OPTIMIZER_PLUGIN_DIR_PATH . 'templates/admin/meta-generator-popup.php';
+    }
 }

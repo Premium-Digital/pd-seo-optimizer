@@ -6,6 +6,7 @@ export function initMetaGeneration() {
         const $form = $(this).closest('form');
         const action = $form.find('select[name="action"]').val();
 
+        console.log('Selected action:', action);
         if (action === 'generate_meta') {
             e.preventDefault();
 
@@ -23,43 +24,19 @@ export function initMetaGeneration() {
         }
     });
 
-    // Funkcja obsługująca batch ajax + popup
     function runMetaGenerationBatch(postIds, pdSeoMetaData) {
-        const $wrap = $('.wrap');
-        const $popup = $(`
-            <div class="overlay" style="
-                position: fixed;
-                width: 100%;
-                height: 100vh;
-                z-index: 9999999;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                background: rgba(0,0,0,0.3);
-                margin: auto;
-                display: flex;
-            ">
-                <div style="padding: 20px;background: #fff;border: 1px solid #ccc;width: 50%;margin: auto;margin-top: auto;margin-bottom: auto;">
-                    <h2>Generowanie Meta za pomocą OpenAI...</h2>
-                    <p id="pd-seo-progress">0%</p>
-                     <button style="display:none" class="close-button">Zamknij</button>
-                </div>
-            </div>
-
-        `);
-
-        $wrap.prepend($popup);
-
-        const batchSize = 2;
+        const $popup = $('#pd-seo-meta-generator-popup-overlay');
+        $popup.css('display', 'flex');
+        const batchSize = pdSeoMetaData.batchSize;
         let currentIndex = 0;
         const total = postIds.length;
 
         function processBatch() {
             const batch = postIds.slice(currentIndex, currentIndex + batchSize);
             if (!batch.length) {
-                $('#pd-seo-progress').text('Zakończono!');
-                $('.close-button').show();
-                $('.close-button').on('click', function() {
+                $('#pd-seo-meta-generator-popup-progress').text('Zakończono!');
+                $('.pd-seo-meta-popup-close-button').show();
+                $('.pd-seo-meta-popup-close-button').on('click', function() {
                     $popup.remove();
                     location.reload();
                 });
@@ -73,10 +50,10 @@ export function initMetaGeneration() {
             }, function (res) {
                 currentIndex += batchSize;
                 const percent = Math.min(100, Math.round((currentIndex / total) * 100));
-                $('#pd-seo-progress').text(`${percent}%`);
+                $('#pd-seo-meta-generator-popup-progress').text(`${percent}%`);
                 processBatch();
             }).fail(() => {
-                $('#pd-seo-progress').text('Wystąpił błąd podczas generowania.');
+                $('#pd-seo-meta-generator-popup-progress').text('Wystąpił błąd podczas generowania.');
             });
         }
 
