@@ -1,6 +1,6 @@
 <?php
 
-namespace PdExtraWidgets;
+namespace PdSeoOptimizer;
 
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 

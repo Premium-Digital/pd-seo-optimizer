@@ -49,15 +49,32 @@ class SeoLogsTable extends \WP_List_Table {
 
     protected function column_default($item, $column_name) {
         if ($column_name === 'post') {
-            $postId = (int) $item->post_id;
-            $post = get_post($postId);
-            if ($post) {
-                $title = esc_html(get_the_title($post));
-                $editLink = esc_url(get_edit_post_link($postId));
-                return sprintf('<a href="%s" target="_blank">%s</a>', $editLink, $title);
-            } else {
-                return '<em>Post not found</em>';
+            $objectId   = (int) $item->object_id;
+            $objectType = $item->object_type ?? '';
+
+            if ($objectType === 'post') {
+                $post = get_post($objectId);
+                if ($post) {
+                    $title    = esc_html(get_the_title($post));
+                    $editLink = esc_url(get_edit_post_link($objectId));
+                    return sprintf('<a href="%s" target="_blank">%s</a>', $editLink, $title);
+                } else {
+                    return '<em>Post not found</em>';
+                }
             }
+
+            if ($objectType === 'term') {
+                $term = get_term($objectId);
+                if ($term && !is_wp_error($term)) {
+                    $title    = esc_html($term->name);
+                    $editLink = esc_url(get_edit_term_link($objectId, $term->taxonomy));
+                    return sprintf('<a href="%s" target="_blank">%s (%s)</a>', $editLink, $title, esc_html($term->taxonomy));
+                } else {
+                    return '<em>Term not found</em>';
+                }
+            }
+
+            return '<em>Unknown object</em>';
         }
 
         if ($column_name === 'details') {
@@ -65,18 +82,19 @@ class SeoLogsTable extends \WP_List_Table {
             if (!is_array($decoded)) {
                 return esc_html($item->$column_name);
             }
-        
+
             $output = '<ul style="margin: 0; padding-left: 1em;">';
             foreach ($decoded as $key => $value) {
                 $output .= '<li><strong>' . esc_html(ucwords(str_replace('_', ' ', $key))) . ':</strong> ' . esc_html($value) . '</li>';
             }
             $output .= '</ul>';
-        
+            
             return $output;
         }
 
         return esc_html($item->$column_name ?? '');
     }
+
 
     public function prepare_items() {
         $columns  = $this->get_columns();

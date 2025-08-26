@@ -3,11 +3,12 @@
 namespace PdSeoOptimizer;
 
 use PdSeoOptimizer\Actions;
-use PdSeoOptimizer\RestRoutes;
+
 use PdSeoOptimizer\Settings;
 use PdSeoOptimizer\Logger;
 use PdSeoOptimizer\Filters;
 use PdSeoOptimizer\Notifier;
+use PdSeoOptimizer\Updater;
 
 class PluginManager
 {
@@ -19,11 +20,12 @@ class PluginManager
 
     public function __construct()
     {
-        $this->logger = Logger::getInstance();
-        $this->actions = new Actions();
-        $this->settings = new Settings();
-        $this->filters = new Filters();
-        $this->notifier = new Notifier();
+        Updater::init();
+        Logger::getInstance();
+        new Actions();
+        new Settings();
+        new Filters();
+        new Notifier();
     }
 
     public static function activate()

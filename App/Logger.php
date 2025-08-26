@@ -8,7 +8,8 @@ class Logger {
     private $wpdb;
     private $tableName;
     private $id = 'id';
-    private $postId = 'post_id';
+    private $objectId = 'object_id';
+    private $objectType = 'object_type';
     private $details = 'details';
     private $status = 'status';
     private $logTime = 'log_time';
@@ -47,7 +48,8 @@ class Logger {
 
         $sql = "CREATE TABLE {$this->tableName} (
             {$this->id} BIGINT(20) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-            {$this->postId} BIGINT(20) UNSIGNED NULL,
+            {$this->objectId} BIGINT(20) UNSIGNED NOT NULL,
+            {$this->objectType} VARCHAR(20) NOT NULL,
             {$this->details} TEXT NULL,
             {$this->status} VARCHAR(20) NOT NULL DEFAULT 'update',
             {$this->logTime} DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -58,12 +60,13 @@ class Logger {
         dbDelta($sql);
     }
 
-    public function addLog(?int $postId = null, string $status = "update", array $details  = []) {
+    public function addLog(int $objectId, string $objectType, string $status = "update", array $details = []) {
         $this->wpdb->query(
             $this->wpdb->prepare(
-                "INSERT INTO {$this->tableName} ({$this->postId}, {$this->details}, {$this->status}, {$this->logTime}) 
-                VALUES (%d, %s, %s, %s)",
-                $postId,
+                "INSERT INTO {$this->tableName} ({$this->objectId}, {$this->objectType}, {$this->details}, {$this->status}, {$this->logTime}) 
+                VALUES (%d, %s, %s, %s, %s)",
+                $objectId,
+                $objectType,
                 wp_json_encode($details, JSON_UNESCAPED_UNICODE),
                 $status,
                 current_time('mysql')
@@ -71,31 +74,51 @@ class Logger {
         );
     }
 
-    public function getLogs(int $limit, int $offset, string $search = '') {
+    public function getLogs(int $limit, int $offset, string $search = '', ?string $objectType = null) {
+        $where = [];
+        $params = [];
+
         if ($search !== '') {
-            $sql = "SELECT * FROM {$this->tableName} WHERE details LIKE %s ORDER BY {$this->logTime} DESC LIMIT %d OFFSET %d";
-            return $this->wpdb->get_results(
-                $this->wpdb->prepare($sql, "%{$search}%", $limit, $offset)
-            );
-        } else {
-            $sql = "SELECT * FROM {$this->tableName} ORDER BY {$this->logTime} DESC LIMIT %d OFFSET %d";
-            return $this->wpdb->get_results(
-                $this->wpdb->prepare($sql, $limit, $offset)
-            );
+            $where[] = "{$this->details} LIKE %s";
+            $params[] = "%{$search}%";
         }
+
+        if ($objectType !== null) {
+            $where[] = "{$this->objectType} = %s";
+            $params[] = $objectType;
+        }
+
+        $whereSql = $where ? "WHERE " . implode(" AND ", $where) : "";
+
+        $sql = "SELECT * FROM {$this->tableName} {$whereSql} ORDER BY {$this->logTime} DESC LIMIT %d OFFSET %d";
+        $params[] = $limit;
+        $params[] = $offset;
+
+        return $this->wpdb->get_results(
+            $this->wpdb->prepare($sql, ...$params)
+        );
     }
 
+    public function countLogs(string $search = '', ?string $objectType = null) {
+        $where = [];
+        $params = [];
 
-    public function countLogs(string $search = '') {
         if ($search !== '') {
-            $sql = "SELECT COUNT(*) FROM {$this->tableName} WHERE details LIKE %s";
-            return (int) $this->wpdb->get_var(
-                $this->wpdb->prepare($sql, "%{$search}%")
-            );
-        } else {
-            $sql = "SELECT COUNT(*) FROM {$this->tableName}";
-            return (int) $this->wpdb->get_var($sql);
+            $where[] = "{$this->details} LIKE %s";
+            $params[] = "%{$search}%";
         }
+
+        if ($objectType !== null) {
+            $where[] = "{$this->objectType} = %s";
+            $params[] = $objectType;
+        }
+
+        $whereSql = $where ? "WHERE " . implode(" AND ", $where) : "";
+
+        $sql = "SELECT COUNT(*) FROM {$this->tableName} {$whereSql}";
+        return (int) $this->wpdb->get_var(
+            $this->wpdb->prepare($sql, ...$params)
+        );
     }
 
     public function deleteLogs(array $ids) {

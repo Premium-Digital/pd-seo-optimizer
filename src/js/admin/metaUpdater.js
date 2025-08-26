@@ -6,7 +6,6 @@ export function initMetaGeneration() {
         const $form = $(this).closest('form');
         const action = $form.find('select[name="action"]').val();
 
-        console.log('Selected action:', action);
         if (action === 'generate_meta') {
             e.preventDefault();
 
@@ -20,19 +19,35 @@ export function initMetaGeneration() {
                 return;
             }
 
-            runMetaGenerationBatch(postIds, pdSeoMetaData);
+            runMetaGenerationBatch(postIds, pdSeoMetaData, "post");
+        }
+
+        if (action === 'generate_meta_terms') {
+            e.preventDefault();
+
+            let termIds = [];
+            $('tbody th.check-column input[type="checkbox"]:checked').each(function() {
+                termIds.push(parseInt($(this).val()));
+            });
+
+            if (termIds.length === 0) {
+                alert('Proszę zaznacz przynajmniej jedną kategorię/termin.');
+                return;
+            }
+
+            runMetaGenerationBatch(termIds, pdSeoMetaData, "term");
         }
     });
 
-    function runMetaGenerationBatch(postIds, pdSeoMetaData) {
+    function runMetaGenerationBatch(ids, pdSeoMetaData, context) {
         const $popup = $('#pd-seo-meta-generator-popup-overlay');
         $popup.css('display', 'flex');
         const batchSize = pdSeoMetaData.batchSize;
         let currentIndex = 0;
-        const total = postIds.length;
+        const total = ids.length;
 
         function processBatch() {
-            const batch = postIds.slice(currentIndex, currentIndex + batchSize);
+            const batch = ids.slice(currentIndex, currentIndex + batchSize);
             if (!batch.length) {
                 $('#pd-seo-meta-generator-popup-progress').text('Zakończono!');
                 $('.pd-seo-meta-popup-close-button').show();
@@ -44,9 +59,9 @@ export function initMetaGeneration() {
             }
 
             $.post(pdSeoMetaData.ajaxurl, {
-                action: 'pd_generate_meta_batch',
+                action: context === 'post' ? 'pd_generate_meta_batch' : 'pd_generate_meta_terms_batch',
                 nonce: pdSeoMetaData.nonce,
-                post_ids: JSON.stringify(batch)
+                ids: JSON.stringify(batch)
             }, function (res) {
                 currentIndex += batchSize;
                 const percent = Math.min(100, Math.round((currentIndex / total) * 100));
