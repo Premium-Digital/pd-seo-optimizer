@@ -44,18 +44,26 @@ class Filters
     function addBulkActions($actions)
     {
         $actions['generate_meta'] = __('Generate Meta (OpenAI)', 'pd-seo-optimizer');
+        $actions['generate_image_alts'] = __('Generate Image Alts (AI)', 'pd-seo-optimizer');
         return $actions;
     }
 
     function handleBulkActions($redirect_to, $action, $post_ids)
     {
-        if ($action !== 'generate_meta') {
-            return $redirect_to;
+        if ($action === 'generate_meta') {
+            return add_query_arg([
+                'pd_generate_meta' => 1,
+                'ids' => implode(',', $post_ids),
+            ], $redirect_to);
         }
 
-        return add_query_arg([
-            'pd_generate_meta' => 1,
-            'ids' => implode(',', $post_ids),
-        ], $redirect_to);
+        if ($action === 'generate_image_alts') {
+            return add_query_arg([
+                'pd_generate_image_alts' => 1,
+                'ids' => implode(',', $post_ids),
+            ], $redirect_to);
+        }
+
+        return $redirect_to;
     }
 }

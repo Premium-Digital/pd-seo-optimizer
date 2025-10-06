@@ -1,6 +1,9 @@
 <?php
 
 namespace PdSeoOptimizer;
+use PdSeoOptimizer\Services\AltGenerator;
+use PdSeoOptimizer\Services\OpenAiClient;
+use PdSeoOptimizer\Services\MetaTitleAndDescriptionGenerator;
 
 class Actions
 {
@@ -10,6 +13,7 @@ class Actions
         add_action( 'admin_enqueue_scripts', array( $this, 'registerAdminStylesAndScripts' ));
         add_action( 'wp_ajax_pd_generate_meta_batch', array($this, 'handleGenerateMetaBatch'));
         add_action( 'wp_ajax_pd_generate_meta_terms_batch', [$this, 'handleGenerateMetaTermsBatch'] );
+        add_action( 'wp_ajax_pd_generate_image_alts_batch', [$this, 'handleGenerateImageAltsBatch']);
         add_action( 'admin_footer-edit.php', [$this, 'renderMetaGeneratorPopup']);
         add_action( 'admin_footer-edit-tags.php',  [$this, 'renderMetaGeneratorPopup'] );
     }
@@ -49,63 +53,44 @@ class Actions
             wp_send_json_error('Invalid post IDs');
         }
 
-        $openAiClient = new \PdSeoOptimizer\Services\OpenAiClient();
-
-        foreach ($postIds as $postId) {
-            $content = get_post_field('post_content', $postId);
-            $response = $openAiClient->generateMeta($content);
-
-            $titleClean = trim($response['title'], '"');
-            $descriptionClean = trim($response['description'], '"');
-
-            update_post_meta($postId, 'rank_math_title', $titleClean);
-            update_post_meta($postId, 'rank_math_description', $descriptionClean);
-
-            \PdSeoOptimizer\Logger::getInstance()->addLog($postId, "post", 'update', [
-                'title' => $titleClean,
-                'description' => $descriptionClean,
-            ]);
-        }
-
+        $generator = new MetaTitleAndDescriptionGenerator(new OpenAiClient());
+        $generator->generateForPosts($postIds);
         wp_send_json_success('Batch processed');
     }
 
     public function handleGenerateMetaTermsBatch() {
-    check_ajax_referer('pd_seo_meta_nonce', 'nonce');
+        check_ajax_referer('pd_seo_meta_nonce', 'nonce');
 
-    $termIds = json_decode(stripslashes($_POST['ids']), true);
-    if (!is_array($termIds)) {
-        wp_send_json_error('Invalid term IDs');
-    }
-
-    $openAiClient = new \PdSeoOptimizer\Services\OpenAiClient();
-
-    foreach ($termIds as $termId) {
-        $term = get_term($termId);
-        if (!$term || is_wp_error($term)) {
-            continue;
+        $termIds = json_decode(stripslashes($_POST['ids']), true);
+        if (!is_array($termIds)) {
+            wp_send_json_error('Invalid term IDs');
         }
 
-        // Treść do podania do AI – np. nazwa i opis kategorii
-        $content = $term->name . "\n\n" . $term->description;
+        $generator = new MetaTitleAndDescriptionGenerator(new OpenAiClient());
+        $generator->generateForTerms($termIds);
+        wp_send_json_success('Batch processed (terms)');
+    }
 
-        $response = $openAiClient->generateMeta($content);
+    public function handleGenerateImageAltsBatch() {
 
-        $titleClean = trim($response['title'], '"');
-        $descriptionClean = trim($response['description'], '"');
+        check_ajax_referer('pd_seo_meta_nonce', 'nonce');
 
-        // Rank Math zapisuje meta terminów w opcjach termmeta
-        update_term_meta($termId, 'rank_math_title', $titleClean);
-        update_term_meta($termId, 'rank_math_description', $descriptionClean);
+        $postIds = json_decode(stripslashes($_POST['ids']), true);
 
-        \PdSeoOptimizer\Logger::getInstance()->addLog($termId, "term", 'update-term', [
-            'title' => $titleClean,
-            'description' => $descriptionClean,
+        if (!is_array($postIds)) {
+            wp_send_json_error('Invalid post IDs');
+        }
+
+        $altGenerator = new AltGenerator(new OpenAiClient());
+
+        $results = $altGenerator->generateForPosts($postIds);
+
+        wp_send_json_success([
+            'processed_posts' => count($postIds),
+            'processed_images' => $results['images_count'] ?? 0
         ]);
     }
 
-        wp_send_json_success('Batch processed (terms)');
-    }
 
     public function renderMetaGeneratorPopup() {
         global $pagenow;
