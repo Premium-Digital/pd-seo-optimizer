@@ -91,12 +91,13 @@ class AltGenerator
     private function generateAlt(int $postId, int $attachmentId): ?string
     {
         $post = get_post($postId);
-        $fileUrl = wp_get_attachment_url($attachmentId);
+        $filePath = get_attached_file($attachmentId);
+        $imageUrl = wp_get_attachment_url($attachmentId);
 
-        if (strpos($fileUrl, 'localhost') !== false) {
+        if (strpos($imageUrl, 'localhost') !== false) {
             return "ALT dla testowego obrazka"; 
         }
 
-        return $this->openAi->generateAltFromImage($post->post_title, $fileUrl);
+        return $this->openAi->generateAltFromImage($post->post_title, $imageUrl, $filePath);
     }
 }

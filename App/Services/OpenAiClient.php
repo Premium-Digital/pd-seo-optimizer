@@ -68,7 +68,7 @@ class OpenAiClient
         return trim($response->choices[0]->message->content ?? '');
     }
 
-    public function generateAltFromImage(string $postTitle, string $imagePath): string
+    public function generateAltFromImage(string $postTitle, string $imageUrl , string $imagePath): string
     {
         if (!file_exists($imagePath)) {
             throw new \RuntimeException("Plik {$imagePath} nie istnieje.");
@@ -81,15 +81,15 @@ class OpenAiClient
                     'role' => 'system',
                     'content' => 'Jesteś ekspertem SEO i generujesz ALT teksty dla obrazków. ALT musi być dokładnym i zwięzłym opisem tego, co znajduje się na obrazie, maks. 125 znaków, preferowane krótsze. Nie używaj słów typu "zdjęcie", "obrazek", "grafika".',
                 ],
-                [
-                    'role' => 'user',
-                    'content' => "Tutuł posta: {$postTitle}\n Proszę wygeneruj ALT dla tego obrazu na podstawie tytułu posta i zawartości obrazu.",
-                    'image' => fopen($imagePath, 'rb')
-                ]
+                ['role'=>'user', 'content'=>[
+                   ['type'=>'text', 'text'=>"Tutuł posta: {$postTitle}\n Proszę wygeneruj ALT dla tego obrazu na podstawie tytułu posta i zawartości obrazu."],
+                   ['type'=>'image_url', 'image_url'=>['url'=>"{$imageUrl}"] ],
+                ],
+            ],
             ],
         ]);
 
-        return trim($response['data'][0]['text'] ?? '');
+        return trim($response->choices[0]->message->content ?? '' );
     }
 
 }
