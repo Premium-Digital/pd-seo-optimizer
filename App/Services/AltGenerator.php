@@ -17,7 +17,13 @@ class AltGenerator
         $imagesProcessed = 0;
 
         foreach ($postIds as $postId) {
-            $attachments = $this->getImagesFromPost($postId);
+            $post = get_post($postId);
+
+            if ($post->post_type === 'attachment' && strpos($post->post_mime_type, 'image/') === 0) {
+                $attachments = [$postId];
+            }else{
+                $attachments = $this->getImagesFromPost($postId);
+            }
             
             foreach ($attachments as $attachmentId) {
                 if (empty(get_post_meta($attachmentId, '_wp_attachment_image_alt', true))) {
@@ -94,9 +100,7 @@ class AltGenerator
         $filePath = get_attached_file($attachmentId);
         $imageUrl = wp_get_attachment_url($attachmentId);
 
-        if (strpos($imageUrl, 'localhost') !== false) {
-            return "ALT dla testowego obrazka"; 
-        }
+        // $imageUrl = str_replace("localhost", "a847efc00726.ngrok-free.app", $imageUrl);
 
         return $this->openAi->generateAltFromImage($post->post_title, $imageUrl, $filePath);
     }

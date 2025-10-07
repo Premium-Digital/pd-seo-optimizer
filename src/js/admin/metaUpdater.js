@@ -1,5 +1,7 @@
 import $ from 'jquery';
 
+import { showButton } from './showButton';
+
 export function initMetaGeneration() {
 
     $('#doaction, #doaction2').on('click', function(e) {
@@ -51,11 +53,7 @@ export function initMetaGeneration() {
             const batch = ids.slice(currentIndex, currentIndex + batchSize);
             if (!batch.length) {
                 $('#pd-seo-meta-generator-popup-progress').text('Zakończono!');
-                $('.pd-seo-meta-popup-close-button').show();
-                $('.pd-seo-meta-popup-close-button').on('click', function() {
-                    $popup.remove();
-                    location.reload();
-                });
+                showButton();
                 return;
             }
 
@@ -70,6 +68,7 @@ export function initMetaGeneration() {
                 processBatch();
             }).fail(() => {
                 $('#pd-seo-meta-generator-popup-progress').text('Wystąpił błąd podczas generowania.');
+                showButton();
             });
         }
 

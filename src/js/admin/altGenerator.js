@@ -1,5 +1,7 @@
 import $ from 'jquery';
 
+import { showButton } from './showButton';
+
 export function initAltGeneration() {
 
     $('#doaction, #doaction2').on('click', function(e) {
@@ -36,11 +38,7 @@ export function initAltGeneration() {
             const batch = ids.slice(currentIndex, currentIndex + batchSize);
             if (!batch.length) {
                 $('#pd-seo-meta-generator-popup-progress').text(`Zakończono! Wygenerowano alt dla ${totalImages} obrazków.`);
-                $('.pd-seo-meta-popup-close-button').show();
-                $('.pd-seo-meta-popup-close-button').on('click', function() {
-                    $popup.remove();
-                    location.reload();
-                });
+                showButton();
                 return;
             }
 
@@ -56,9 +54,53 @@ export function initAltGeneration() {
                 processBatch();
             }).fail(() => {
                 $('#pd-seo-meta-generator-popup-progress').text('Wystąpił błąd podczas generowania altów.');
+                showButton();
             });
         }
 
         processBatch();
     }
 }
+
+export function initSingleAttachmentAlt() {
+    jQuery("body").on("click", ".thumbnail",  function() {
+        if($('.pd-generate-alt-button').length) {
+            return;
+        }
+        setTimeout(() => {
+            let html = `
+                <span class="setting" data-setting="pd-generate-alt">
+                    <label class="name">Generuj alt (AI)</label>
+                    <button type="button" class="button pd-generate-alt-button">Generuj alt (AI)</button>
+                </span>
+            `;
+            const $container = $('.attachment-info > .settings');
+            $container.prepend(html);
+            let attachmentId = $(this).closest("li").data('id');
+            console.log(attachmentId);
+            $container.find('.pd-generate-alt-button').on('click',  function() {
+                const $button = $(this);
+
+                $button.text('Generowanie...');
+
+                jQuery.post(pdSeoMetaData.ajaxurl, {
+                    action: 'pd_generate_image_alts_batch',
+                    nonce: pdSeoMetaData.nonce,
+                    ids: JSON.stringify([attachmentId])
+                }).done((res) => {
+                    if (res.success) {
+                        $('#attachment-details-two-column-alt-text').val(res.data.alt || '');
+                        alert('ALT wygenerowany: ' + (res.data.processed_images || 0) + ' obrazek/ów');
+                    } else {
+                        alert('Błąd: ' + res.data.message);
+                    }
+                    $button.text('Generuj alt (AI)');
+                }).fail(() => {
+                    alert('Błąd podczas generowania ALT');
+                    $button.text('Generuj alt (AI)');
+                });
+            });
+        }, 500);
+    });
+}
+

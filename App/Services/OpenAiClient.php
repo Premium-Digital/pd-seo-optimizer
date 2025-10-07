@@ -3,6 +3,8 @@
 namespace PdSeoOptimizer\Services;
 
 use OpenAI;
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\HttpClient\Psr18Client;
 
 class OpenAiClient
 {
@@ -15,7 +17,14 @@ class OpenAiClient
             throw new \RuntimeException('Brakuje klucza OpenAI.');
         }
 
-        $this->client = OpenAI::client($apiKey);
+        $httpClient = new Psr18Client(
+            HttpClient::create(['timeout' => 360])
+        );
+
+        $this->client = OpenAI::factory()
+            ->withApiKey($apiKey)
+            ->withHttpClient($httpClient)
+            ->make();
     }
 
     public function generateMeta(string $content): array
