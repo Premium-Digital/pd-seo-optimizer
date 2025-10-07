@@ -77,7 +77,6 @@ export function initSingleAttachmentAlt() {
             const $container = $('.attachment-info > .settings');
             $container.prepend(html);
             let attachmentId = $(this).closest("li").data('id');
-            console.log(attachmentId);
             $container.find('.pd-generate-alt-button').on('click',  function() {
                 const $button = $(this);
 
@@ -89,7 +88,7 @@ export function initSingleAttachmentAlt() {
                     ids: JSON.stringify([attachmentId])
                 }).done((res) => {
                     if (res.success) {
-                        $('#attachment-details-two-column-alt-text').val(res.data.alt || '');
+                        $('#attachment-details-two-column-alt-text').text(res.data.alt || '');
                         alert('ALT wygenerowany: ' + (res.data.processed_images || 0) + ' obrazek/ów');
                     } else {
                         alert('Błąd: ' + res.data.message);

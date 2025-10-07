@@ -3,7 +3,7 @@
 /**
  * Plugin Name: PD Seo Optimizer
  * Description: Seo Optimizer for WordPress.
- * Version: 1.0.15
+ * Version: 1.0.16
  * Author: kkarasiewicz
  */
 
