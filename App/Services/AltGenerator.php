@@ -100,8 +100,6 @@ class AltGenerator
         $filePath = get_attached_file($attachmentId);
         $imageUrl = wp_get_attachment_url($attachmentId);
 
-        // $imageUrl = str_replace("localhost", "a847efc00726.ngrok-free.app", $imageUrl);
-
         return $this->openAi->generateAltFromImage($post->post_title, $imageUrl, $filePath);
     }
 }

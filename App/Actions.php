@@ -21,21 +21,21 @@ class Actions
     public function registerStylesAndScripts()
     {
         //styles
-        wp_enqueue_style( 'pd-seo-optimizer-styles', PD_SEO_OPTIMIZER_PLUGIN_DIR_URL . 'dist/front.css' );
+        wp_enqueue_style( 'pd-seo-optimizer-styles', PD_SEO_OPTIMIZER_PLUGIN_DIR_URL . 'dist/pd-seo-optimizer-front.css' );
 
         //scripts
-        wp_enqueue_script( 'pd-seo-optimizer-scripts', PD_SEO_OPTIMIZER_PLUGIN_DIR_URL . 'dist/front.js', array(), null, true );
+        wp_enqueue_script( 'pd-seo-optimizer-scripts', PD_SEO_OPTIMIZER_PLUGIN_DIR_URL . 'dist/pd-seo-optimizer-front.js', array(), null, true );
     }
 
     public function registerAdminStylesAndScripts()
     {
         //styles
-        wp_enqueue_style( 'pd-seo-optimizer-admin-styles', PD_SEO_OPTIMIZER_PLUGIN_DIR_URL . 'dist/admin.css' );
+        wp_enqueue_style( 'pd-seo-optimizer-admin-styles', PD_SEO_OPTIMIZER_PLUGIN_DIR_URL . 'dist/pd-seo-optimizer-admin.css' );
 
         //scripts
         wp_enqueue_script('jquery');
         wp_enqueue_media();
-        wp_enqueue_script( 'pd-seo-optimizer-admin-scripts', PD_SEO_OPTIMIZER_PLUGIN_DIR_URL . 'dist/admin.js', array('jquery'), null, true );
+        wp_enqueue_script( 'pd-seo-optimizer-admin-scripts', PD_SEO_OPTIMIZER_PLUGIN_DIR_URL . 'dist/pd-seo-optimizer-admin.js', array('jquery'), null, true );
 
         wp_localize_script('pd-seo-optimizer-admin-scripts', 'pdSeoMetaData', [
             'ajaxurl' => admin_url('admin-ajax.php'),

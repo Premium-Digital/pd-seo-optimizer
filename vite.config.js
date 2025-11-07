@@ -12,8 +12,8 @@ export default defineConfig({
         admin: path.resolve(__dirname, 'src/js/admin.js'),
       },
       output: {
-        entryFileNames: '[name].js',
-        assetFileNames: '[name].css',
+        entryFileNames: 'pd-seo-optimizer-[name].js',
+        assetFileNames: 'pd-seo-optimizer-[name].css',
       },
     },
   },
