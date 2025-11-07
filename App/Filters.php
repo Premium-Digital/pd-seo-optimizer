@@ -19,6 +19,7 @@ class Filters
 
         $postTypes = \RankMath\Helper::get_allowed_post_types();
         $taxonomies = \RankMath\Helper::get_allowed_taxonomies();
+
         $taxonomies = array_unique(array_merge($taxonomies, ['product_cat']));
         if (is_array($postTypes)) {
             foreach ($postTypes as $postType) {
