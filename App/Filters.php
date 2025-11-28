@@ -34,6 +34,10 @@ class Filters
                 add_filter("handle_bulk_actions-edit-{$taxonomy}", [$this, 'handleBulkActions'], 10, 3);
             }
         }
+
+        // Media library bulk actions
+        add_filter('bulk_actions-upload', [$this, 'addMediaBulkActions']);
+        add_filter('handle_bulk_actions-upload', [$this, 'handleMediaBulkActions'], 10, 3);
     }
 
     function addBulkActionsTerms($actions)
@@ -62,6 +66,24 @@ class Filters
             return add_query_arg([
                 'pd_generate_image_alts' => 1,
                 'ids' => implode(',', $post_ids),
+            ], $redirect_to);
+        }
+
+        return $redirect_to;
+    }
+
+    function addMediaBulkActions($actions)
+    {
+        $actions['generate_media_alts'] = __('Generate Alt Text (AI)', 'pd-seo-optimizer');
+        return $actions;
+    }
+
+    function handleMediaBulkActions($redirect_to, $action, $attachment_ids)
+    {
+        if ($action === 'generate_media_alts') {
+            return add_query_arg([
+                'pd_generate_media_alts' => 1,
+                'ids' => implode(',', $attachment_ids),
             ], $redirect_to);
         }
 

@@ -20,10 +20,11 @@ class AltGenerator
             $post = get_post($postId);
 
             if ($post->post_type === 'attachment' && strpos($post->post_mime_type, 'image/') === 0) {
-                $attachments = [$postId];
-            }else{
-                $attachments = $this->getImagesFromPost($postId);
+                // Skip direct attachments - they should use generateForAttachments()
+                continue;
             }
+
+            $attachments = $this->getImagesFromPost($postId);
 
             foreach ($attachments as $attachmentId) {
                 if (empty(get_post_meta($attachmentId, '_wp_attachment_image_alt', true))) {
@@ -37,6 +38,48 @@ class AltGenerator
         }
 
         return ['images_count' => $imagesProcessed];
+    }
+
+    /**
+     * Generate alt text for attachment IDs directly from media library
+     *
+     * @param array $attachmentIds Array of attachment post IDs
+     * @return array Array with images_count and optional alt_text for single attachment
+     */
+    public function generateForAttachments(array $attachmentIds): array
+    {
+        $imagesProcessed = 0;
+        $generatedAlt = null;
+
+        foreach ($attachmentIds as $attachmentId) {
+            $attachment = get_post($attachmentId);
+            
+            // Verify it's an image attachment
+            if (!$attachment || $attachment->post_type !== 'attachment' || strpos($attachment->post_mime_type, 'image/') !== 0) {
+                continue;
+            }
+
+            // Skip if alt text already exists
+            if (!empty(get_post_meta($attachmentId, '_wp_attachment_image_alt', true))) {
+                continue;
+            }
+
+            $alt = $this->generateAltForAttachment($attachmentId);
+            if ($alt) {
+                update_post_meta($attachmentId, '_wp_attachment_image_alt', $alt);
+                $imagesProcessed++;
+                // Store the alt text for single attachment cases
+                $generatedAlt = $alt;
+            }
+        }
+
+        $result = ['images_count' => $imagesProcessed];
+        // Only include alt_text if processing a single attachment
+        if (count($attachmentIds) === 1 && $generatedAlt) {
+            $result['alt_text'] = $generatedAlt;
+        }
+        
+        return $result;
     }
 
 
@@ -59,8 +102,8 @@ class AltGenerator
     
            $galleryImages = get_post_gallery_images($postId);
 
-            if(is_object(wc_get_product($postId))){
-                $product = wc_get_product($postId);
+            if(function_exists('wc_get_product') && is_object(\wc_get_product($postId))){
+                $product = \wc_get_product($postId);
                 $attachmentIds = $product->get_gallery_image_ids();
                 $ids = array_merge($ids, $attachmentIds);
             }
@@ -146,8 +189,25 @@ class AltGenerator
         $filePath = get_attached_file($attachmentId);
         $imageUrl = wp_get_attachment_url($attachmentId);
 
-        $imageUrl = str_replace("localhost", "9213eac6aafe.ngrok-free.app", $imageUrl);
+        $ngrokUrl = getenv('NGROK_URL');
+        if ($ngrokUrl) {
+            $imageUrl = str_replace("localhost", $ngrokUrl, $imageUrl);
+        }
 
         return $this->openAi->generateAltFromImage($post->post_title, $imageUrl, $filePath);
+    }
+
+    private function generateAltForAttachment(int $attachmentId): ?string
+    {
+        $attachment = get_post($attachmentId);
+        $filePath = get_attached_file($attachmentId);
+        $imageUrl = wp_get_attachment_url($attachmentId);
+
+        $ngrokUrl = getenv('NGROK_URL');
+        if ($ngrokUrl) {
+            $imageUrl = str_replace("localhost", $ngrokUrl, $imageUrl);
+        }
+
+        return $this->openAi->generateAltFromImage($attachment->post_title, $imageUrl, $filePath);
     }
 }

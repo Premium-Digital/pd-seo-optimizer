@@ -14,8 +14,11 @@ class Actions
         add_action( 'wp_ajax_pd_generate_meta_batch', array($this, 'handleGenerateMetaBatch'));
         add_action( 'wp_ajax_pd_generate_meta_terms_batch', [$this, 'handleGenerateMetaTermsBatch'] );
         add_action( 'wp_ajax_pd_generate_image_alts_batch', [$this, 'handleGenerateImageAltsBatch']);
+        add_action( 'wp_ajax_pd_generate_media_alts_batch', [$this, 'handleGenerateMediaAltsBatch']);
+        add_action( 'wp_ajax_pd_generate_single_attachment_alt', [$this, 'handleGenerateSingleAttachmentAlt']);
         add_action( 'admin_footer-edit.php', [$this, 'renderMetaGeneratorPopup']);
         add_action( 'admin_footer-edit-tags.php',  [$this, 'renderMetaGeneratorPopup'] );
+        add_action( 'admin_footer-upload.php', [$this, 'renderMetaGeneratorPopup'] );
     }
 
     public function registerStylesAndScripts()
@@ -87,34 +90,52 @@ class Actions
 
         wp_send_json_success([
             'processed_posts' => count($postIds),
+            'processed_images' => $results['images_count'] ?? 0,
+            'alt_text' => $results['alt_text'] ?? null
+        ]);
+    }
+
+    public function handleGenerateMediaAltsBatch() {
+
+        check_ajax_referer('pd_seo_meta_nonce', 'nonce');
+
+        $attachmentIds = json_decode(stripslashes($_POST['ids']), true);
+
+        if (!is_array($attachmentIds)) {
+            wp_send_json_error('Invalid attachment IDs');
+        }
+
+        $altGenerator = new AltGenerator(new OpenAiClient());
+
+        $results = $altGenerator->generateForAttachments($attachmentIds);
+
+        wp_send_json_success([
+            'processed_attachments' => count($attachmentIds),
             'processed_images' => $results['images_count'] ?? 0
+        ]);
+    }
+
+    public function handleGenerateSingleAttachmentAlt() {
+
+        check_ajax_referer('pd_seo_meta_nonce', 'nonce');
+
+        $attachmentId = isset($_POST['attachment_id']) ? intval($_POST['attachment_id']) : 0;
+
+        if (!$attachmentId) {
+            wp_send_json_error('Invalid attachment ID');
+        }
+
+        $altGenerator = new AltGenerator(new OpenAiClient());
+        $results = $altGenerator->generateForAttachments([$attachmentId]);
+
+        wp_send_json_success([
+            'processed_images' => $results['images_count'] ?? 0,
+            'alt_text' => $results['alt_text'] ?? null
         ]);
     }
 
 
     public function renderMetaGeneratorPopup() {
-        global $pagenow;
-        $context = null;
-
-        if ( $pagenow === 'edit.php' ) {
-            $currentPostType  = $_GET['post_type'] ?? 'post';
-            $allowedTypes     = \RankMath\Helper::get_allowed_post_types();
-            if ( in_array($currentPostType, $allowedTypes, true) ) {
-                $context = 'post';
-            }
-        }
-
-        if ( $pagenow === 'edit-tags.php' ) {
-            $currentTaxonomy   = $_GET['taxonomy'] ?? '';
-            $allowedTaxonomies = \RankMath\Helper::get_allowed_taxonomies();
-            $allowedTaxonomies = array_unique(array_merge($allowedTaxonomies, ['product_cat']));
-            if ( in_array($currentTaxonomy, $allowedTaxonomies, true) ) {
-                $context = 'term';
-            }
-        }
-
-        if ( $context ) {
-            include PD_SEO_OPTIMIZER_PLUGIN_DIR_PATH . 'templates/admin/meta-generator-popup.php';
-        }
+        include PD_SEO_OPTIMIZER_PLUGIN_DIR_PATH . 'templates/admin/meta-generator-popup.php';
     }
 }
