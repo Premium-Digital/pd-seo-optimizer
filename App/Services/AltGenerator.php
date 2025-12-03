@@ -194,6 +194,11 @@ class AltGenerator
             $imageUrl = str_replace("localhost", $ngrokUrl, $imageUrl);
         }
 
+        // Validate image format before sending to OpenAI
+        if (!$this->isSupportedImage($filePath)) {
+            return null;
+        }
+
         return $this->openAi->generateAltFromImage($post->post_title, $imageUrl, $filePath);
     }
 
@@ -208,6 +213,35 @@ class AltGenerator
             $imageUrl = str_replace("localhost", $ngrokUrl, $imageUrl);
         }
 
+        // Validate image format before sending to OpenAI
+        if (!$this->isSupportedImage($filePath)) {
+              return null;
+        }
+
         return $this->openAi->generateAltFromImage($attachment->post_title, $imageUrl, $filePath);
+    }
+
+    /**
+     * Check whether an image file is in a supported format.
+     * Preferred: check MIME via getimagesize, fallback to extension.
+     * Supported formats: png, jpeg, gif, webp
+     *
+     * @param string|null $path Local filesystem path to the image
+     * @return bool
+     */
+    private function isSupportedImage(?string $path): bool
+    {
+        if (empty($path) || !file_exists($path)) {
+            return false;
+        }
+
+        $info = @getimagesize($path);
+        if ($info && isset($info['mime'])) {
+            $allowed = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
+            return in_array(strtolower($info['mime']), $allowed, true);
+        }
+
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        return in_array($ext, ['png', 'jpg', 'jpeg', 'gif', 'webp'], true);
     }
 }
