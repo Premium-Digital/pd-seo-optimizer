@@ -61,6 +61,52 @@ class MetaGenerator
         ];
     }
 
+    /**
+     * Try to fetch and extract textual content from the public post URL.
+     * Returns an empty string on failure.
+     */
+    private function fetchPostUrlContent(int $postId): string
+    {
+        $permalink = get_permalink($postId);
+        if (empty($permalink)) {
+            return '';
+        }
+
+        $response = wp_remote_get($permalink, [
+            'timeout' => 10,
+            'headers' => [
+                'User-Agent' => 'PdSeoOptimizer/1.0',
+            ],
+        ]);
+
+        if (is_wp_error($response)) {
+            return '';
+        }
+
+        $code = wp_remote_retrieve_response_code($response);
+        if ((int) $code !== 200) {
+            return '';
+        }
+
+        $body = wp_remote_retrieve_body($response);
+        if (empty($body)) {
+            return '';
+        }
+
+        $text = wp_strip_all_tags($body);
+        $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $text = preg_replace('/\s+/', ' ', $text);
+        $text = trim($text);
+
+        if (function_exists('mb_substr')) {
+            $text = mb_substr($text, 0, 5000);
+        } else {
+            $text = substr($text, 0, 5000);
+        }
+
+        return (string) $text;
+    }
+
     public function generateMetaForPosts(array $postIds): void
     {
         foreach ($postIds as $postId) {
@@ -72,11 +118,14 @@ class MetaGenerator
                     $product = wc_get_product($postId);
                     if ($product && method_exists($product, 'get_short_description')) {
                         $content = $product->get_short_description();
-                    } else {
-                        $content = get_post_field('post_excerpt', $postId);
                     }
-                } else {
-                    $content = get_post_field('post_excerpt', $postId);
+                }
+            }
+
+            if (empty(trim($content))) {
+                $fetched = $this->fetchPostUrlContent($postId);
+                if (!empty($fetched)) {
+                    $content = $fetched;
                 }
             }
 
@@ -103,11 +152,14 @@ class MetaGenerator
                     $product = wc_get_product($postId);
                     if ($product && method_exists($product, 'get_short_description')) {
                         $content = $product->get_short_description();
-                    } else {
-                        $content = get_post_field('post_excerpt', $postId);
                     }
-                } else {
-                    $content = get_post_field('post_excerpt', $postId);
+                }
+            }
+            // URL fallback when still empty
+            if (empty(trim($content))) {
+                $fetched = $this->fetchPostUrlContent($postId);
+                if (!empty($fetched)) {
+                    $content = $fetched;
                 }
             }
             $title = $this->generateTitle($content);
@@ -130,11 +182,14 @@ class MetaGenerator
                     $product = wc_get_product($postId);
                     if ($product && method_exists($product, 'get_short_description')) {
                         $content = $product->get_short_description();
-                    } else {
-                        $content = get_post_field('post_excerpt', $postId);
                     }
-                } else {
-                    $content = get_post_field('post_excerpt', $postId);
+                }
+            }
+            // URL fallback when still empty
+            if (empty(trim($content))) {
+                $fetched = $this->fetchPostUrlContent($postId);
+                if (!empty($fetched)) {
+                    $content = $fetched;
                 }
             }
             $description = $this->generateDescription($content);

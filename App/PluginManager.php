@@ -12,11 +12,6 @@ use PdSeoOptimizer\Updater;
 
 class PluginManager
 {
-    private $logger;
-    private $actions;
-    private $settings;
-    private $filters;
-    private $notifier;
 
     public function __construct()
     {
