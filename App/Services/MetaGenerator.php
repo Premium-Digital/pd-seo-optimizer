@@ -24,7 +24,7 @@ class MetaGenerator
             ],
         ]);
 
-        return trim($response->choices[0]->message->content ?? '');
+        return trim($response->choices[0]->message->content ?? '', '"');
     }
 
     public function generateDescription(string $content): string
@@ -40,7 +40,7 @@ class MetaGenerator
             ],
         ]);
 
-        return trim($response->choices[0]->message->content ?? '');
+        return trim($response->choices[0]->message->content ?? '', '"');
     }
     
     public function generateMetaTitleAndDescription(string $content): array
@@ -56,8 +56,8 @@ class MetaGenerator
         $description = $this->generateDescription($content);
         
         return [
-            'title' => $title,
-            'description' => $description,
+            'title' => trim($title, '"'),
+            'description' => trim($description, '"'),
         ];
     }
 
@@ -82,15 +82,12 @@ class MetaGenerator
 
             $response = $this->generateMetaTitleAndDescription($content);
 
-            $titleClean = trim($response['title'], '"');
-            $descriptionClean = trim($response['description'], '"');
-
-            update_post_meta($postId, 'rank_math_title', $titleClean);
-            update_post_meta($postId, 'rank_math_description', $descriptionClean);
+            update_post_meta($postId, 'rank_math_title', $response['title']);
+            update_post_meta($postId, 'rank_math_description', $response['description']);
 
             \PdSeoOptimizer\Logger::getInstance()->addLog($postId, "post", 'update', [
-                'title' => $titleClean,
-                'description' => $descriptionClean,
+                'title' => $response['title'],
+                'description' => $response['description']   ,
             ]);
         }
     }
@@ -113,14 +110,11 @@ class MetaGenerator
                     $content = get_post_field('post_excerpt', $postId);
                 }
             }
-            $response = $this->generateTitle($content);
+            $title = $this->generateTitle($content);
 
-            $titleClean = trim($response, '"');
-
-            update_post_meta($postId, 'rank_math_title', $titleClean);
-
+            update_post_meta($postId, 'rank_math_title', $title);
             \PdSeoOptimizer\Logger::getInstance()->addLog($postId, "post", 'update-title', [
-                'title' => $titleClean,
+                'title' => $title,
             ]);
         }
     }
@@ -143,14 +137,12 @@ class MetaGenerator
                     $content = get_post_field('post_excerpt', $postId);
                 }
             }
-            $response = $this->generateDescription($content);
+            $description = $this->generateDescription($content);
 
-            $descriptionClean = trim($response, '"');
-
-            update_post_meta($postId, 'rank_math_description', $descriptionClean);
+            update_post_meta($postId, 'rank_math_description', $description);
 
             \PdSeoOptimizer\Logger::getInstance()->addLog($postId, "post", 'update-description', [
-                'description' => $descriptionClean,
+                'description' => $description,
             ]);
         }
     }
@@ -166,15 +158,12 @@ class MetaGenerator
             $content = $term->name . "\n\n" . $term->description;
             $response = $this->generateMetaTitleAndDescription($content);
 
-            $titleClean = trim($response['title'], '"');
-            $descriptionClean = trim($response['description'], '"');
-
-            update_term_meta($termId, 'rank_math_title', $titleClean);
-            update_term_meta($termId, 'rank_math_description', $descriptionClean);
+            update_term_meta($termId, 'rank_math_title', $response['title']);
+            update_term_meta($termId, 'rank_math_description', $response['description']);
 
             \PdSeoOptimizer\Logger::getInstance()->addLog($termId, "term", 'update-term', [
-                'title' => $titleClean,
-                'description' => $descriptionClean,
+                'title' => $response['title'],
+                'description' => $response['description'],
             ]);
         }
     }
