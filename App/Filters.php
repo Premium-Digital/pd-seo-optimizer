@@ -49,6 +49,8 @@ class Filters
     function addBulkActions($actions)
     {
         $actions['generate_meta'] = __('Generate Meta (OpenAI)', 'pd-seo-optimizer');
+        $actions['generate_meta_title'] = __('Generate Meta Title (OpenAI)', 'pd-seo-optimizer');
+        $actions['generate_meta_description'] = __('Generate Meta Description (OpenAI)', 'pd-seo-optimizer');
         $actions['generate_image_alts'] = __('Generate Image Alts (AI)', 'pd-seo-optimizer');
         return $actions;
     }
@@ -58,6 +60,20 @@ class Filters
         if ($action === 'generate_meta') {
             return add_query_arg([
                 'pd_generate_meta' => 1,
+                'ids' => implode(',', $post_ids),
+            ], $redirect_to);
+        }
+
+        if ($action === 'generate_meta_title') {
+            return add_query_arg([
+                'pd_generate_meta_title' => 1,
+                'ids' => implode(',', $post_ids),
+            ], $redirect_to);
+        }
+
+        if ($action === 'generate_meta_description') {
+            return add_query_arg([
+                'pd_generate_meta_description' => 1,
                 'ids' => implode(',', $post_ids),
             ], $redirect_to);
         }

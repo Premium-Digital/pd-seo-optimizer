@@ -44,7 +44,9 @@ class Settings
     }
 
     public function registerSettings() {
-        register_setting('pd_seo_optimizer_options_group', 'pd_seo_optimizer_openai_api_key');
+        register_setting('pd_seo_optimizer_options_group', 'pd_seo_optimizer_openai_api_key', [
+            'sanitize_callback' => [$this, 'sanitizeOpenAiApiKey']
+        ]);
         register_setting('pd_seo_optimizer_options_group', 'pd_seo_optimizer_batch_size', [
             'type' => 'integer',
             'default' => 10,
@@ -54,6 +56,27 @@ class Settings
 
     public static function saveApiKey($apiKey) {
         update_site_option('pd_seo_optimizer_post_api_key', $apiKey);
+    }
+
+    /**
+     * Sanitize API key input: preserve existing key when input is empty unless user requested clear.
+     */
+    public function sanitizeOpenAiApiKey($value)
+    {
+        // If user checked clear box, remove key
+        if (!empty($_POST['pd_seo_optimizer_openai_api_key_clear'])) {
+            return '';
+        }
+
+        $value = trim((string) $value);
+
+        // If empty but an existing key is present, preserve it
+        $existing = get_option('pd_seo_optimizer_openai_api_key', '');
+        if ($value === '' && !empty($existing)) {
+            return $existing;
+        }
+
+        return $value;
     }
 
     public function renderLogsPage() {

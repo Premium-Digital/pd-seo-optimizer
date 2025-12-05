@@ -3,7 +3,7 @@
 namespace PdSeoOptimizer;
 use PdSeoOptimizer\Services\AltGenerator;
 use PdSeoOptimizer\Services\OpenAiClient;
-use PdSeoOptimizer\Services\MetaTitleAndDescriptionGenerator;
+use PdSeoOptimizer\Services\MetaGenerator;
 
 class Actions
 {
@@ -11,6 +11,8 @@ class Actions
     {
         add_action( 'wp_enqueue_scripts', array( $this, 'registerStylesAndScripts' ) );
         add_action( 'admin_enqueue_scripts', array( $this, 'registerAdminStylesAndScripts' ));
+        add_action( 'wp_ajax_pd_generate_meta_title_batch', [$this, 'handleGenerateMetaTitleBatch']);
+        add_action( 'wp_ajax_pd_generate_meta_description_batch', [$this, 'handleGenerateMetaDescriptionBatch']);
         add_action( 'wp_ajax_pd_generate_meta_batch', array($this, 'handleGenerateMetaBatch'));
         add_action( 'wp_ajax_pd_generate_meta_terms_batch', [$this, 'handleGenerateMetaTermsBatch'] );
         add_action( 'wp_ajax_pd_generate_image_alts_batch', [$this, 'handleGenerateImageAltsBatch']);
@@ -19,6 +21,7 @@ class Actions
         add_action( 'admin_footer-edit.php', [$this, 'renderMetaGeneratorPopup']);
         add_action( 'admin_footer-edit-tags.php',  [$this, 'renderMetaGeneratorPopup'] );
         add_action( 'admin_footer-upload.php', [$this, 'renderMetaGeneratorPopup'] );
+        
     }
 
     public function registerStylesAndScripts()
@@ -56,8 +59,8 @@ class Actions
             wp_send_json_error('Invalid post IDs');
         }
 
-        $generator = new MetaTitleAndDescriptionGenerator(new OpenAiClient());
-        $generator->generateForPosts($postIds);
+        $generator = new MetaGenerator(new OpenAiClient());
+        $generator->generateMetaForPosts($postIds);
         wp_send_json_success('Batch processed');
     }
 
@@ -69,7 +72,7 @@ class Actions
             wp_send_json_error('Invalid term IDs');
         }
 
-        $generator = new MetaTitleAndDescriptionGenerator(new OpenAiClient());
+        $generator = new MetaGenerator(new OpenAiClient());
         $generator->generateForTerms($termIds);
         wp_send_json_success('Batch processed (terms)');
     }
@@ -86,7 +89,7 @@ class Actions
 
         $altGenerator = new AltGenerator(new OpenAiClient());
 
-        $results = $altGenerator->generateForPosts($postIds);
+        $results = $altGenerator->generateMetaForPosts($postIds);
 
         wp_send_json_success([
             'processed_posts' => count($postIds),
@@ -134,6 +137,31 @@ class Actions
         ]);
     }
 
+        public function handleGenerateMetaTitleBatch() {
+        check_ajax_referer('pd_seo_meta_nonce', 'nonce');
+
+        $postIds = json_decode(stripslashes($_POST['ids']), true);
+        if (!is_array($postIds)) {
+            wp_send_json_error('Invalid post IDs');
+        }
+
+        $generator = new MetaGenerator(new OpenAiClient());
+        $generator->generateTitlesForPosts($postIds);
+        wp_send_json_success('Titles generated');
+    }
+
+    public function handleGenerateMetaDescriptionBatch() {
+        check_ajax_referer('pd_seo_meta_nonce', 'nonce');
+
+        $postIds = json_decode(stripslashes($_POST['ids']), true);
+        if (!is_array($postIds)) {
+            wp_send_json_error('Invalid post IDs');
+        }
+
+        $generator = new MetaGenerator(new OpenAiClient());
+        $generator->generateDescriptionsForPosts($postIds);
+        wp_send_json_success('Descriptions generated');
+    }
 
     public function renderMetaGeneratorPopup() {
         include PD_SEO_OPTIMIZER_PLUGIN_DIR_PATH . 'templates/admin/meta-generator-popup.php';

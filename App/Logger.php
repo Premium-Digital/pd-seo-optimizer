@@ -116,6 +116,11 @@ class Logger {
         $whereSql = $where ? "WHERE " . implode(" AND ", $where) : "";
 
         $sql = "SELECT COUNT(*) FROM {$this->tableName} {$whereSql}";
+
+        if (empty($params)) {
+            return (int) $this->wpdb->get_var($sql);
+        }
+
         return (int) $this->wpdb->get_var(
             $this->wpdb->prepare($sql, ...$params)
         );

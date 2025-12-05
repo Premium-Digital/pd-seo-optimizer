@@ -1,6 +1,7 @@
 import '../scss/admin.scss';
 import { initMetaGeneration  } from './admin/metaUpdater.js';
 import { initAltGeneration, initSingleAttachmentAlt, initMediaAltGeneration } from './admin/altGenerator.js';
+import { initApiKeyUI } from './admin/apiKey.js';
 jQuery.noConflict();
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -8,4 +9,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initAltGeneration();
     initSingleAttachmentAlt();
     initMediaAltGeneration();
+    initApiKeyUI();
 });

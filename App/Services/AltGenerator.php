@@ -5,14 +5,38 @@ use PdSeoOptimizer\Services\OpenAiClient;
 
 class AltGenerator
 {
-    private $openAi;
+    private OpenAiClient $openAiClient;
 
-    public function __construct(OpenAiClient $openAi)
+    public function __construct(OpenAiClient $openAiClient)
     {
-        $this->openAi = $openAi;
+        $this->openAiClient = $openAiClient;
     }
 
-    public function generateForPosts(array $postIds): array
+        public function generateAltFromImage(string $postTitle, string $imageUrl , string $imagePath): string
+    {
+        if (!file_exists($imagePath)) {
+            throw new \RuntimeException("Plik {$imagePath} nie istnieje.");
+        }
+
+        $response = $this->openAiClient->chat()->create([
+            'model' => 'gpt-4o',
+            'messages' => [
+                [
+                    'role' => 'system',
+                    'content' => 'Jesteś ekspertem SEO i generujesz ALT teksty dla obrazków. ALT musi być dokładnym i zwięzłym opisem tego, co znajduje się na obrazie, maks. 125 znaków, preferowane krótsze. Nie używaj słów typu "zdjęcie", "obrazek", "grafika".',
+                ],
+                ['role'=>'user', 'content'=>[
+                   ['type'=>'text', 'text'=>"Tutuł posta: {$postTitle}\n Proszę wygeneruj ALT dla tego obrazu na podstawie tytułu posta i zawartości obrazu."],
+                   ['type'=>'image_url', 'image_url'=>['url'=>"{$imageUrl}"] ],
+                ],
+            ],
+            ],
+        ]);
+
+        return trim($response->choices[0]->message->content ?? '' );
+    }
+
+    public function generateMetaForPosts(array $postIds): array
     {
         $imagesProcessed = 0;
 
@@ -20,7 +44,6 @@ class AltGenerator
             $post = get_post($postId);
 
             if ($post->post_type === 'attachment' && strpos($post->post_mime_type, 'image/') === 0) {
-                // Skip direct attachments - they should use generateForAttachments()
                 continue;
             }
 
@@ -40,12 +63,6 @@ class AltGenerator
         return ['images_count' => $imagesProcessed];
     }
 
-    /**
-     * Generate alt text for attachment IDs directly from media library
-     *
-     * @param array $attachmentIds Array of attachment post IDs
-     * @return array Array with images_count and optional alt_text for single attachment
-     */
     public function generateForAttachments(array $attachmentIds): array
     {
         $imagesProcessed = 0;
@@ -54,12 +71,10 @@ class AltGenerator
         foreach ($attachmentIds as $attachmentId) {
             $attachment = get_post($attachmentId);
             
-            // Verify it's an image attachment
             if (!$attachment || $attachment->post_type !== 'attachment' || strpos($attachment->post_mime_type, 'image/') !== 0) {
                 continue;
             }
 
-            // Skip if alt text already exists
             if (!empty(get_post_meta($attachmentId, '_wp_attachment_image_alt', true))) {
                 continue;
             }
@@ -68,13 +83,12 @@ class AltGenerator
             if ($alt) {
                 update_post_meta($attachmentId, '_wp_attachment_image_alt', $alt);
                 $imagesProcessed++;
-                // Store the alt text for single attachment cases
                 $generatedAlt = $alt;
             }
         }
 
         $result = ['images_count' => $imagesProcessed];
-        // Only include alt_text if processing a single attachment
+
         if (count($attachmentIds) === 1 && $generatedAlt) {
             $result['alt_text'] = $generatedAlt;
         }
@@ -194,12 +208,11 @@ class AltGenerator
             $imageUrl = str_replace("localhost", $ngrokUrl, $imageUrl);
         }
 
-        // Validate image format before sending to OpenAI
         if (!$this->isSupportedImage($filePath)) {
             return null;
         }
 
-        return $this->openAi->generateAltFromImage($post->post_title, $imageUrl, $filePath);
+        return $this->generateAltFromImage($post->post_title, $imageUrl, $filePath);
     }
 
     private function generateAltForAttachment(int $attachmentId): ?string
@@ -213,22 +226,13 @@ class AltGenerator
             $imageUrl = str_replace("localhost", $ngrokUrl, $imageUrl);
         }
 
-        // Validate image format before sending to OpenAI
         if (!$this->isSupportedImage($filePath)) {
               return null;
         }
 
-        return $this->openAi->generateAltFromImage($attachment->post_title, $imageUrl, $filePath);
+        return $this->generateAltFromImage($attachment->post_title, $imageUrl, $filePath);
     }
 
-    /**
-     * Check whether an image file is in a supported format.
-     * Preferred: check MIME via getimagesize, fallback to extension.
-     * Supported formats: png, jpeg, gif, webp
-     *
-     * @param string|null $path Local filesystem path to the image
-     * @return bool
-     */
     private function isSupportedImage(?string $path): bool
     {
         if (empty($path) || !file_exists($path)) {
